@@ -1,22 +1,37 @@
 import bpy
-#                                                                                                                               #Переменные
-base_race = "chaos"                                                                                                             # расса с которой копируем территорию
-base_name = "gurmuns_pass"                                                                                                       # название территории для копирования
-source_obj_name = base_name + "_" + base_race
-suffixes = ["enemy1","enemy2", "enemy3", "enemy4", "enemy5", "enemy6", "enemy7", "enemy8", "templar", "tyranids"]               # имена новых расс
-armature_name = "Armature"                                                                                                      # название арматуры
-image_race_list = ["enemy1", "enemy2", "enemy3", "enemy4", "enemy5", "enemy6", "enemy7", "enemy8", "templar_race", "tyranids_race"]   # название для текстур территорий под новые рассы
-texture_share_path = "/art/ui/3d_models/texture_share/"                                                                         # стандартный путь до текстур в файлах игры
-image_path = 'C:/Users/NeedMoreCoffee/Desktop/texture_share/texture_share Ready1/kaurava_iv/'                                   # путь до текстур заменяйте \ на /
-map_suffixes = ["", "_spc", "_emi"]                                                                                             # Суффиксы карт(не менять!)
+#                                                                                #Переменные
+base_race = "null"                                          
+suffixes = ["chaos", "daemons", "templar", "dark_eldar", "eldar", "guard", "khorne_marine", "necron", "ork", "sisters", "space_marine", "tau", "tyranids", "enclaves", "demonhunters", "renegade_guard", "thousand_sons", "night_lords"]                                                                                                                   # имена новых расс
+armature_name = "Armature"                                                                                                                     # название арматуры
+image_race_list = ["chaos", "daemons", "templar", "dark_eldar", "eldar", "guard", "khorne_marine", "necron", "ork", "sisters", "space_marine", "tau", "tyranids", "enclaves", "demonhunters", "renegade_guard", "thousand_sons", "night_lords"]                                                                                                            # название для текстур территорий под новые рассы
+texture_share_path = "art/ui/3d_models/texture_share/"
+map_suffixes = ["", "_spc", "_emi"]                                                                                                            # Суффиксы карт(не менять!)
 images = []
+print("-----------------------------------------------Start-----------------------------------------------")
+def find_first_mesh_by_race(race):
+    for obj in bpy.data.objects:
+        if base_race == "null":
+            if obj.type == 'MESH':
+                print("first mesh: " + obj.name)
+                return obj.name
+        else:
+            print("3")
+            if obj.type == 'MESH' and race in obj.name:
+                name = obj.name
+                # ищем последний '_' и убираем суффикс
+                if '_' in name:
+                    base_name = '_'.join(name.split('_')[:-1])
+                else:
+                    base_name = name
+                return base_name
 
 def get_base_name_planet():
     parts_mapping = {
         "kaurava_i_border": "kaurava_i_border",
         "kaurava_ii_border": "kaurava_ii_border",
         "kaurava_iii_border": "kaurava_iii_border",
-        "kaurava_iv_border": "kaurava_iv_border"
+        "kaurava_iv_border": "kaurava_iv_border",
+        "kaurava_v_border": "kaurava_v_border"
     }
     
     for mat in bpy.data.materials:
@@ -25,8 +40,6 @@ def get_base_name_planet():
                 return value
     return None
 
-base_name_planet = get_base_name_planet()  # если у вас свои названия для планеты или планет замените на: base_name_planet = "ваше название планеты"
-source_obj = bpy.data.objects.get(source_obj_name)
 
 # Функция для создания материала
 def create_material(mat_name):
@@ -88,6 +101,7 @@ def bone_duplicate_and_anim(suffix, new_obj, broken= False):
     # Копируем анимацию
     original_action = source_obj.animation_data.action
     new_action = original_action.copy()
+    
     if broken:
         new_action.name = f"vis_{suffix}_broken"
         new_obj_broken.animation_data_create()
@@ -151,12 +165,15 @@ def create_mat_and_shaders(broken = False):
     uv_map3.inputs[1].default_value[0] = 0.5
     uv_map3.inputs[1].default_value[1] = 0.5
     uv_map3.inputs[1].default_value[2] = 0.5
+    print("Check 1 ")
     links.new(uv_map2.outputs[0], uv_map3.inputs[0])
     if broken:
-        diff_name = f"{base_name_planet}_{race}_broken.dds"
+        diff_name = f"{base_name_planet}_{race}_race_broken.dds"
     else:
-        diff_name = f"{base_name_planet}_{race}.dds"
+        diff_name = f"{base_name_planet}_{race}_race.dds"
     image = bpy.data.images.get(diff_name)
+    print(diff_name)
+    print(image)
     if broken:
         image.dow_export_path = f"{texture_share_path}{base_name_planet}_{race}_broken"
     else:
@@ -168,89 +185,147 @@ def create_mat_and_shaders(broken = False):
     diff.dow_image_label = 'diffuse'
     diff.location = (800, 200)
     links.new(uv_map3.outputs[0], diff.inputs[0])
-    if broken:
-        specularity_name = f"{base_name_planet}_{race}_broken_spc.dds"
-    else:
-        specularity_name = f"{base_name_planet}_{race}_spc.dds"
-    image = bpy.data.images.get(specularity_name)
-    if broken:
-        image.dow_export_path = f"{texture_share_path}{base_name_planet}_{race}_broken_spc"
-    else:
-        image.dow_export_path = f"{texture_share_path}{base_name_planet}_{race}_spc"
+    if base_name_planet != "kaurava_i_border":
+        if broken:
+            specularity_name = f"{base_name_planet}_{race}_race_broken_spc.dds"
+        else:
+            specularity_name = f"{base_name_planet}_{race}_race_spc.dds"
+        image = bpy.data.images.get(specularity_name)
+        if broken:
+            image.dow_export_path = f"{texture_share_path}{base_name_planet}_{race}_broken_spc"
+        else:
+            image.dow_export_path = f"{texture_share_path}{base_name_planet}_{race}_spc"
 
-    specularity = nodes.new(type='ShaderNodeTexImage')
-    specularity.image = image
-    specularity.label = "specularity"
-    specularity.dow_image_label = 'specularity'
-    specularity.location = (800, -100)
-    links.new(uv_map3.outputs[0], specularity.inputs[0])
-    if broken:
-        self_emi_name = f"{base_name_planet}_{race}_broken_emi.dds"
-    else:
-        self_emi_name = f"{base_name_planet}_{race}_emi.dds"
-    image = bpy.data.images.get(self_emi_name)
-    if broken:
-        image.dow_export_path = f"{texture_share_path}{base_name_planet}_{race}_broken_emi"
-    else:
-        image.dow_export_path = f"{texture_share_path}{base_name_planet}_{race}_emi"
+        specularity = nodes.new(type='ShaderNodeTexImage')
+        specularity.image = image
+        specularity.label = "specularity"
+        specularity.dow_image_label = 'specularity'
+        specularity.location = (800, -100)
+        links.new(uv_map3.outputs[0], specularity.inputs[0])
+        if broken:
+            self_emi_name = f"{base_name_planet}_{race}_race_broken_emi.dds"
+        else:
+            self_emi_name = f"{base_name_planet}_{race}_race_emi.dds"
+        image = bpy.data.images.get(self_emi_name)
+        if broken:
+            image.dow_export_path = f"{texture_share_path}{base_name_planet}_{race}_broken_emi"
+        else:
+            image.dow_export_path = f"{texture_share_path}{base_name_planet}_{race}_emi"
 
-    self_emi = nodes.new(type='ShaderNodeTexImage')
-    self_emi.image = image
-    self_emi.label = 'self_illumination'
-    self_emi.dow_image_label = 'self_illumination'
-    self_emi.location = (800, -400)
-    links.new(uv_map3.outputs[0], self_emi.inputs[0])
+        self_emi = nodes.new(type='ShaderNodeTexImage')
+        self_emi.image = image
+        self_emi.label = 'self_illumination'
+        self_emi.dow_image_label = 'self_illumination'
+        self_emi.location = (800, -400)
+        links.new(uv_map3.outputs[0], self_emi.inputs[0])
     if broken:
         bpy.data.materials[mat_name]['full_path'] = f"{base_name_planet}_{race}_broken"
     else:
         bpy.data.materials[mat_name]['full_path'] = f"{base_name_planet}_{race}"
     bpy.data.materials[mat_name]['protected'] = True
-
-    apply_spec = nodes.new(type='ShaderNodeMix')
-    apply_spec.label = 'Apply_spec'
-    apply_spec.name = "data_type"
-    apply_spec.data_type = 'RGBA'
-    apply_spec.blend_type = 'ADD'
-    apply_spec.location = (1100, 200)
-    links.new(diff.outputs[0], apply_spec.inputs[6])
-    links.new(specularity.outputs[0], apply_spec.inputs[7])
+    if base_name_planet != "kaurava_i_border":
+        apply_spec = nodes.new(type='ShaderNodeMix')
+        apply_spec.label = 'Apply_spec'
+        apply_spec.name = "data_type"
+        apply_spec.data_type = 'RGBA'
+        apply_spec.clamp_result = True
+        apply_spec.blend_type = 'ADD'
+        apply_spec.location = (1100, 200)
+        links.new(diff.outputs[0], apply_spec.inputs[6])
+        links.new(specularity.outputs[0], apply_spec.inputs[7])
 
     math_node = nodes.new(type='ShaderNodeMath')
     math_node.operation = 'MULTIPLY'
     math_node.location = (1100, -100)
     links.new(diff.outputs[1], math_node.inputs[0])
-    links.new(obj_info.outputs[3], math_node.inputs[1])
-
-    gamma_node = nodes.new(type='ShaderNodeGamma')
-    gamma_node.location = (1100, -300)
-    gamma_node.inputs['Gamma'].default_value = 0.454
-    links.new(specularity.outputs[0], gamma_node.inputs[0])
+    links.new(obj_info.outputs[2], math_node.inputs[1])
+    
+    if base_name_planet != "kaurava_i_border":
+        gamma_node = nodes.new(type='ShaderNodeGamma')
+        gamma_node.location = (1100, -300)
+        gamma_node.inputs['Gamma'].default_value = 0.454
+        links.new(specularity.outputs[0], gamma_node.inputs[0])
 
     bsdf = nodes.new(type='ShaderNodeBsdfPrincipled')
     bsdf.location = (1300, 200)
     bsdf.inputs[2].default_value = 0.133
-    links.new(apply_spec.outputs[2], bsdf.inputs[0])
-    links.new(gamma_node.outputs[0], bsdf.inputs[1])
+    if base_name_planet != "kaurava_iv_border":
+        bsdf.inputs[1].default_value = 1
+    else:
+        bsdf.inputs[1].default_value = 0
     links.new(math_node.outputs[0], bsdf.inputs[4])
-    links.new(self_emi.outputs[0], bsdf.inputs[27])
-    links.new(self_emi.outputs[0], bsdf.inputs[28])
-
+    if base_name_planet != "kaurava_i_border":
+        links.new(apply_spec.outputs[2], bsdf.inputs[0])
+        links.new(gamma_node.outputs[0], bsdf.inputs[1])
+        links.new(specularity.outputs[0], bsdf.inputs[14])
+        links.new(self_emi.outputs[0], bsdf.inputs[27])
+        links.new(self_emi.outputs[0], bsdf.inputs[28])
+    else:
+        links.new(diff.outputs[0], bsdf.inputs[0])
     material_output = nodes.new(type='ShaderNodeOutputMaterial')
     material_output.location = (1600, 200)
     links.new(bsdf.outputs[0], material_output.inputs[0])
 
 
+def blender_dow(base_name):
+    excluded_names = ["idle", "intro", "outro"]
+    meshes = [obj for obj in bpy.data.objects if obj.type == 'MESH' and base_name in obj.name]
+    actions_list = [action.name for action in bpy.data.actions]
+
+    for mesh in meshes:
+        mesh_name = mesh.name
+
+        # Выбираем и активируем меш
+        bpy.ops.object.select_all(action='DESELECT')
+        mesh.select_set(True)
+        bpy.context.view_layer.objects.active = mesh
+
+        # Удаляем base_name из начала строки
+        remaining_name = mesh_name[len(base_name):]
+
+        # Убираем начальные подчеркивания или пробелы
+        remaining_name = remaining_name.lstrip('_')
+
+        print(remaining_name)
+        # Формируем список действий
+        actions = []
+        for action_name in actions_list:
+            if mesh_name == base_name:
+                selected = not (action_name in excluded_names)
+            else:
+                selected = (action_name != f"vis_{remaining_name}")
+            actions.append({"name": action_name, "selected": selected})
+
+        # Вызов оператора
+        try:
+            bpy.ops.object.dow_batch_configure_force_invisible(
+                mesh_name=mesh_name,
+                actions=actions
+            )
+        except RuntimeError as e:
+            print(f"Ошибка при вызове оператора для {mesh_name}: {e}")         
+base_name = find_first_mesh_by_race(base_race)
+print("base_name: " + base_name)
+if base_race != "null":
+    source_obj_name = base_name + "_" + base_race
+else:
+    source_obj_name = base_name
+print("source_obj_name: " + source_obj_name)
+base_name_planet = get_base_name_planet()  # если у вас свои названия для планеты или планет замените на: base_name_planet = "ваше название планеты"
+source_obj = bpy.data.objects.get(source_obj_name)  
+image_path = f"D:/Telegram Desktop/temp/kv/"   # путь до текстур заменяйте \ на /
+print("image_path: " + image_path)
 
 for suffix in image_race_list:
     for map_suffix in map_suffixes:
-        full_path = f"{image_path}{base_name_planet}_{suffix}{map_suffix}.dds"
-        print(full_path)
+        full_path = f"{image_path}{base_name_planet}_{suffix}_race{map_suffix}.dds"
         img = bpy.data.images.load(full_path)
         images.append(img)
-        full_path_broken = f"{image_path}{base_name_planet}_{suffix}_broken{map_suffix}.dds"
-        print(full_path_broken)
+        full_path_broken = f"{image_path}{base_name_planet}_{suffix}_race_broken{map_suffix}.dds"
         img_broken = bpy.data.images.load(full_path_broken)
         images.append(img_broken)
+        if base_name_planet == "kaurava_i_border":
+            break
 
 for suffix, race in zip(suffixes, image_race_list):
     # Меш и группы
@@ -263,23 +338,4 @@ for suffix, race in zip(suffixes, image_race_list):
     new_mat = create_mat_and_shaders()
     new_mat_broken = create_mat_and_shaders(True)
             
-            
-    '''actions = bpy.data.actions
-    action_list  = []
-    for i in range(len(actions)):
-        if actions[i].name!= f"vis_{suffix}" and actions[i].name!= f"vis_{suffix}_broken":
-                    action_list.append([{"name":actions[i].name},{"name":actions[i].name},{"selected":True}])
-        elif actions[i].name == f"vis_{suffix}" or actions[i].name == f"vis_{suffix}_broken":
-                    action_list.append([{"name":actions[i].name},{"name":actions[i].name},{"selected":False}])
-                
-    for i in range(len(action_list)):
-        print(action_list[i])
-    
-    new_obj = bpy.data.objects.get("cape_of_despair_enemy1")
-    bpy.context.view_layer.objects.active = new_obj        
-    bpy.ops.object.dow_batch_configure_force_invisible(
-    'INVOKE_DEFAULT',
-    mesh_name=f"vis_{suffix}",
-    selected_index=0,
-    actions = action_list
-    )'''
+blender_dow(base_name)
